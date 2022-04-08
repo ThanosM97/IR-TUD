@@ -1,4 +1,4 @@
-"""This module implements the training of the XGBoost classifier."""
+"""This module implements training of the XGBoost classifier and rakking."""
 import argparse
 
 import pandas as pd
@@ -12,8 +12,8 @@ from xgboost import XGBClassifier
 def test(dataset: Union[str, Path], checkpoint: Union[str, Path]) -> None:
     """ Test XBG model.
 
-    This function evaluates on `dataset` a trained XGB classifier from
-    `checkpoint` and prints the classification report.
+    This function generates a ranking for the `dataset` using a trained XGB 
+    classifier from `checkpoint`.
 
     Arguments:
         - dataset (str, Path) :  Path to train dataset.
@@ -26,11 +26,24 @@ def test(dataset: Union[str, Path], checkpoint: Union[str, Path]) -> None:
         columns={0: "target", 1: "qid", 2: "pid"})
 
     targets = features["target"].copy()
+    ids = features[["qid", "pid"]].copy()
     features.drop(["target", "qid", "pid"], axis=1,  inplace=True)
 
-    pred = clf.predict(features)
+    pred = clf.predict_proba(features)
+    pred = pd.DataFrame(pred[:, 1], columns=["pred"])
 
-    print(classification_report(targets, pred))
+    ranking = pd.concat([ids, pred], axis=1)
+
+    # Sort per query-group of passages
+    ranking = ranking.groupby('qid').apply(lambda x: x.sort_values(
+        'pred', ascending=False)).add_suffix('t').reset_index().drop([
+            "qid", "level_1"],
+        axis=1)
+
+    # There are 1000 passages per query
+    ranking["predt"] = ranking.index % 1000 + 1
+
+    ranking.to_csv("XGB_ranking.txt", header=None, sep="\t", index=False)
 
 
 def train(
