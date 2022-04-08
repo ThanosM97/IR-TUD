@@ -10,7 +10,7 @@ from numpy.linalg import norm
 from pyserini.index import IndexReader
 from tqdm import tqdm
 
-from .vectorizer import Word2VecVectorizer
+from vectorizer import Word2VecVectorizer
 
 
 def matching_terms(query: str, passage: str, index_reader: IndexReader) -> int:
