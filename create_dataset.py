@@ -65,21 +65,22 @@ def main(args):
     else:
         vectorizer = None
 
-    # Split query-positive-negative triplets
-    pos = df.drop("neg_id", axis=1).drop_duplicates().reset_index(
-        drop=True).rename(columns={"pos_id": "pid"})
-    neg = df.drop("pos_id", axis=1).drop_duplicates().reset_index(
-        drop=True).rename(columns={"neg_id": "pid"})
+    if args.split == "train":
+        # Split query-positive-negative triplets
+        pos = df.drop("neg_id", axis=1).drop_duplicates().reset_index(
+            drop=True).rename(columns={"pos_id": "pid"})
+        neg = df.drop("pos_id", axis=1).drop_duplicates().reset_index(
+            drop=True).rename(columns={"neg_id": "pid"})
 
-    # Add relevance labels
-    pos["relevance"] = 1
-    neg["relevance"] = 0
+        # Add relevance labels
+        pos["relevance"] = 1
+        neg["relevance"] = 0
 
-    merged_pos = pd.merge(pos, queries, how="inner", on="qid")
-    merged_neg = pd.merge(neg, queries, how="inner", on="qid")
+        merged_pos = pd.merge(pos, queries, how="inner", on="qid")
+        merged_neg = pd.merge(neg, queries, how="inner", on="qid")
 
-    # Create final set of examples
-    df = pd.concat([merged_pos, merged_neg]).reset_index(drop=True)
+        # Create final set of examples
+        df = pd.concat([merged_pos, merged_neg]).reset_index(drop=True)
 
     # Baseline L2R features
     df["score"] = 0.0
