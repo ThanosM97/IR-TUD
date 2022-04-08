@@ -1,3 +1,4 @@
+"""This module implements the training of the XGBoost classifier."""
 import argparse
 
 import pandas as pd
