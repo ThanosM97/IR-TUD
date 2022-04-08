@@ -34,6 +34,7 @@ def test(dataset: Union[str, Path], checkpoint: Union[str, Path]) -> None:
 
 def train(
         dataset: Union[str, Path],
+        val_dataset: Union[str, Path],
         filename: Union[str, Path] = "XGB.model") -> None:
     """ Train XBG model.
 
@@ -42,6 +43,7 @@ def train(
 
     Arguments:
         - dataset (str, Path) :  Path to train dataset.
+        - val_dataset (str, Path) :  Path to validation dataset.
         - filename (str, Path) : Filename for the saved model.
     """
     features = pd.read_csv(
@@ -57,8 +59,19 @@ def train(
     targets = features["target"].copy()
     features.drop(["target", "qid", "pid"], axis=1,  inplace=True)
 
+    # Train
     clf = XGBClassifier(tree_method='hist')
     clf.fit(features, targets)
+
+    # Validate
+    val_features = pd.read_csv(
+        val_dataset, header=None, sep=" ").rename(
+        columns={0: "target", 1: "qid", 2: "pid"})
+    val_targets = val_features["target"].copy()
+    val_features.drop(["target", "qid", "pid"], axis=1,  inplace=True)
+
+    pred = clf.predict(features)
+    print(classification_report(val_targets, pred))
 
     clf.save_model(filename)
 
@@ -69,6 +82,8 @@ if __name__ == "__main__":
 
     parser.add_argument(
         '--train', type=str, default=None, help="Path to train dataset.")
+    parser.add_argument(
+        '--val', type=str, default=None, help="Path to validation dataset.")
     parser.add_argument(
         '--save', type=str, default="XGB.model",
         help="Filename for the saved model.")
@@ -89,7 +104,7 @@ if __name__ == "__main__":
             "Please specify path to a model's checkpoint [--checkpoint PATH]")
 
     if args.train is not None:
-        train(args.train, args.save)
+        train(args.train, args.val, args.save)
 
     if args.test is not None:
         test(args.test, args.checkpoint)
