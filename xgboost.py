@@ -65,7 +65,7 @@ def train(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Compute features on a set.")
+        description="Train and test XGBoost classifier.")
 
     parser.add_argument(
         '--train', type=str, default=None, help="Path to train dataset.")
